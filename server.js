@@ -12,8 +12,22 @@ let userTokens = null;
 // Initialize calendar service with credentials
 async function initializeCalendar() {
   try {
-    const credentialsPath = './credentials.json'; // You'll put your Google credentials here
-    const credentials = JSON.parse(await fs.readFile(credentialsPath));
+    let credentials;
+    
+    if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+      // Use environment variables (production)
+      credentials = {
+        web: {
+          client_id: process.env.GOOGLE_CLIENT_ID,
+          client_secret: process.env.GOOGLE_CLIENT_SECRET
+        }
+      };
+    } else {
+      // Use credentials.json file (development)
+      const credentialsPath = './credentials.json';
+      credentials = JSON.parse(await fs.readFile(credentialsPath));
+    }
+    
     await calendarService.initialize(credentials);
     console.log('Calendar service initialized');
   } catch (error) {
