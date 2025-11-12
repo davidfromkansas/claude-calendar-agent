@@ -9,16 +9,26 @@ class CalendarService {
 
   // Initialize OAuth client with credentials
   async initialize(credentials) {
-    const { client_id, client_secret } = credentials.web;
-    const redirectUri = process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3000/callback';
-    
-    this.oauth2Client = new google.auth.OAuth2(
-      client_id,
-      client_secret,
-      redirectUri
-    );
+    try {
+      const { client_id, client_secret } = credentials.web || credentials;
+      const redirectUri = process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3000/callback';
+      
+      if (!client_id || !client_secret) {
+        throw new Error('Missing client_id or client_secret');
+      }
+      
+      this.oauth2Client = new google.auth.OAuth2(
+        client_id,
+        client_secret,
+        redirectUri
+      );
 
-    this.calendar = google.calendar({ version: 'v3', auth: this.oauth2Client });
+      this.calendar = google.calendar({ version: 'v3', auth: this.oauth2Client });
+      console.log('Calendar service initialized successfully');
+    } catch (error) {
+      console.error('Calendar initialization error:', error.message);
+      throw error;
+    }
   }
 
   // Get authorization URL for user to grant permissions
