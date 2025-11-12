@@ -1,0 +1,96 @@
+{
+  "tools": [
+    {
+      "name": "create_calendar_event",
+      "description": "Creates a new event in the user's Google Calendar",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "The title/summary of the event"
+          },
+          "start_time": {
+            "type": "string",
+            "description": "Start time in ISO format (e.g., '2024-12-15T10:00:00')"
+          },
+          "end_time": {
+            "type": "string",
+            "description": "End time in ISO format (e.g., '2024-12-15T11:00:00')"
+          },
+          "description": {
+            "type": "string",
+            "description": "Optional description/details for the event"
+          },
+          "attendees": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Optional list of email addresses to invite"
+          }
+        },
+        "required": ["title", "start_time", "end_time"]
+      }
+    },
+    {
+      "name": "list_calendar_events",
+      "description": "Lists upcoming events from the user's Google Calendar",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "max_results": {
+            "type": "integer",
+            "description": "Maximum number of events to return (default: 10)",
+            "minimum": 1,
+            "maximum": 50
+          }
+        }
+      }
+    },
+    {
+      "name": "update_calendar_event",
+      "description": "Updates an existing calendar event",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "event_id": {
+            "type": "string",
+            "description": "The ID of the event to update"
+          },
+          "title": {
+            "type": "string",
+            "description": "New title for the event"
+          },
+          "start_time": {
+            "type": "string",
+            "description": "New start time in ISO format"
+          },
+          "end_time": {
+            "type": "string",
+            "description": "New end time in ISO format"
+          },
+          "description": {
+            "type": "string",
+            "description": "New description for the event"
+          }
+        },
+        "required": ["event_id"]
+      }
+    },
+    {
+      "name": "delete_calendar_event",
+      "description": "Deletes a calendar event",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "event_id": {
+            "type": "string",
+            "description": "The ID of the event to delete"
+          }
+        },
+        "required": ["event_id"]
+      }
+    }
+  ]
+}
