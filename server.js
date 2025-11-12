@@ -166,6 +166,19 @@ app.get('/', (req, res) => {
   });
 });
 
+// Debug endpoint
+app.get('/debug', (req, res) => {
+  res.json({
+    env: {
+      NODE_ENV: process.env.NODE_ENV,
+      GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ? 'Set' : 'Not set',
+      GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET ? 'Set' : 'Not set',
+      GOOGLE_REDIRECT_URI: process.env.GOOGLE_REDIRECT_URI
+    },
+    calendarServiceInitialized: !!calendarService.oauth2Client
+  });
+});
+
 const PORT = process.env.PORT || 3000;
 const isDevelopment = process.env.NODE_ENV !== 'production';
 
