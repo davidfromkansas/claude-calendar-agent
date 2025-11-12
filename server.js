@@ -159,7 +159,7 @@ app.post('/slack-webhook', express.urlencoded({ extended: true }), async (req, r
     // Use Claude to parse natural language and decide what calendar action to take
     const message = await Promise.race([
       anthropic.messages.create({
-        model: 'claude-3-5-sonnet-20241022',
+        model: 'claude-3-haiku-20240307',
         max_tokens: 1000,
         messages: [{
           role: 'user',
