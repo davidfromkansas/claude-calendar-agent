@@ -253,7 +253,19 @@ app.post('/slack-events', express.json(), async (req, res) => {
       
       if (result.isToolCall) {
         const emoji = result.success ? '✅' : '❌';
-        const responseText = result.success ? result.message || 'Action completed!' : result.error;
+        let responseText = result.success ? result.message || 'Action completed!' : result.error;
+        
+        // Add preview details for confirmation events
+        if (result.success && result.preview) {
+          responseText += `\n\n**Event Details:**\n`;
+          responseText += `📅 **Title:** ${result.preview.title}\n`;
+          responseText += `🕐 **When:** ${result.preview.when}\n`;
+          responseText += `👥 **Attendees:** ${result.preview.attendees}\n`;
+          if (result.preview.description && result.preview.description !== 'No description provided') {
+            responseText += `📝 **Description:** ${result.preview.description}\n`;
+          }
+        }
+        
         const fullText = result.contextText ? `${result.contextText}\n\n${emoji} ${responseText}` : `${emoji} ${responseText}`;
         console.log('Sending tool result to Slack:', fullText);
         const slackResponse = await slack.chat.postMessage({
