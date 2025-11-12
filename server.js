@@ -220,6 +220,35 @@ Respond with either:
       const emoji = result.success ? '✅' : '❌';
       const responseText = result.success ? result.message || 'Action completed!' : result.error;
       
+      // Use delayed response for conversational feel
+      if (response_url) {
+        // Send immediate acknowledgment
+        res.json({ text: `🤔 Processing your request...` });
+        
+        // Send delayed response
+        const fetch = require('node:https');
+        const postData = JSON.stringify({
+          text: `${emoji} ${responseText}`,
+          response_type: 'in_channel'
+        });
+        
+        setTimeout(() => {
+          const options = {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Content-Length': Buffer.byteLength(postData)
+            }
+          };
+          
+          const req = require('node:https').request(response_url, options);
+          req.write(postData);
+          req.end();
+        }, 1000);
+        
+        return;
+      }
+      
       return res.json({
         text: `${emoji} ${responseText}`,
         response_type: 'in_channel'
@@ -228,6 +257,32 @@ Respond with either:
     } else {
       // Claude is asking for more information
       const claudeResponse = message.content[0].text;
+      
+      // Use delayed response for questions too
+      if (response_url) {
+        res.json({ text: `🤔 Let me think about that...` });
+        
+        const postData = JSON.stringify({
+          text: `🤔 ${claudeResponse}`,
+          response_type: 'in_channel'
+        });
+        
+        setTimeout(() => {
+          const options = {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Content-Length': Buffer.byteLength(postData)
+            }
+          };
+          
+          const req = require('node:https').request(response_url, options);
+          req.write(postData);
+          req.end();
+        }, 1000);
+        
+        return;
+      }
       
       return res.json({
         text: `🤔 ${claudeResponse}`,
