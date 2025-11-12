@@ -225,11 +225,19 @@ app.post('/slack-events', express.json(), async (req, res) => {
     
     // Check if calendar is authenticated
     if (!userTokens) {
+      console.log('❌ Calendar not authenticated for mention');
       return res.json({});
     }
     
     // Check if Claude API is available
     if (!anthropic) {
+      console.log('❌ Claude API not available for mention');
+      return res.json({});
+    }
+    
+    // Check if Slack is available
+    if (!slack) {
+      console.log('❌ Slack not initialized - missing SLACK_BOT_TOKEN');
       return res.json({});
     }
     
