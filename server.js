@@ -2,12 +2,18 @@ require('dotenv').config();
 const express = require('express');
 const CalendarService = require('./calendar');
 const fs = require('fs').promises;
+const Anthropic = require('@anthropic-ai/sdk');
 
 const app = express();
 app.use(express.json());
 
 const calendarService = new CalendarService();
 let userTokens = null;
+
+// Initialize Claude API client
+const anthropic = process.env.CLAUDE_API_KEY ? new Anthropic({
+  apiKey: process.env.CLAUDE_API_KEY
+}) : null;
 
 // Initialize calendar service with credentials
 async function initializeCalendar() {
@@ -123,6 +129,110 @@ app.post('/webhook', async (req, res) => {
   }
 
   res.json(result);
+});
+
+// Slack webhook endpoint
+app.post('/slack-webhook', express.urlencoded({ extended: true }), async (req, res) => {
+  console.log('Received Slack webhook:', req.body);
+  
+  const { text, user_name, response_url } = req.body;
+  
+  // Check if calendar is authenticated
+  if (!userTokens) {
+    return res.json({
+      text: '❌ Calendar not authenticated. Please visit https://claude-calendar-agent-production.up.railway.app/auth first.',
+      response_type: 'ephemeral'
+    });
+  }
+  
+  // Check if Claude API is available
+  if (!anthropic) {
+    return res.json({
+      text: '❌ Claude API not configured. Please add CLAUDE_API_KEY environment variable.',
+      response_type: 'ephemeral'
+    });
+  }
+  
+  try {
+    // Use Claude to parse natural language and decide what calendar action to take
+    const message = await anthropic.messages.create({
+      model: 'claude-3-sonnet-20240229',
+      max_tokens: 1000,
+      messages: [{
+        role: 'user',
+        content: `You are a calendar assistant. The user said: "${text}"
+        
+Convert this to a calendar action using these tools:
+- create_calendar_event: Creates new events
+- list_calendar_events: Shows upcoming events  
+- update_calendar_event: Modifies existing events
+- delete_calendar_event: Removes events
+- confirm_calendar_event: Preview before creating
+
+If you need more information (like time, attendees, etc.), respond with questions instead of calling a tool.
+
+Respond with either:
+1. A tool call if you have enough info
+2. Questions to gather missing details`
+      }],
+      tools: JSON.parse(await fs.readFile('./agent-tools.json')).tools
+    });
+
+    // Check if Claude wants to call a tool
+    if (message.content[0].type === 'tool_use') {
+      const toolCall = message.content[0];
+      
+      // Set calendar tokens for this request
+      calendarService.setTokens(userTokens);
+      
+      // Execute the calendar action
+      let result;
+      switch (toolCall.name) {
+        case 'create_calendar_event':
+          result = await handleCreateEvent(toolCall.input);
+          break;
+        case 'list_calendar_events':
+          result = await handleListEvents(toolCall.input);
+          break;
+        case 'update_calendar_event':
+          result = await handleUpdateEvent(toolCall.input);
+          break;
+        case 'delete_calendar_event':
+          result = await handleDeleteEvent(toolCall.input);
+          break;
+        case 'confirm_calendar_event':
+          result = await handleConfirmEvent(toolCall.input);
+          break;
+        default:
+          result = { success: false, error: `Unknown tool: ${toolCall.name}` };
+      }
+      
+      // Format response for Slack
+      const emoji = result.success ? '✅' : '❌';
+      const responseText = result.success ? result.message || 'Action completed!' : result.error;
+      
+      return res.json({
+        text: `${emoji} ${responseText}`,
+        response_type: 'in_channel'
+      });
+      
+    } else {
+      // Claude is asking for more information
+      const claudeResponse = message.content[0].text;
+      
+      return res.json({
+        text: `🤔 ${claudeResponse}`,
+        response_type: 'ephemeral'
+      });
+    }
+    
+  } catch (error) {
+    console.error('Slack webhook error:', error);
+    return res.json({
+      text: `❌ Error processing request: ${error.message}`,
+      response_type: 'ephemeral'
+    });
+  }
 });
 
 // Tool handlers

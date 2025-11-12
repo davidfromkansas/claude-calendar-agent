@@ -91,7 +91,7 @@ class CalendarService {
   }
 
   // List upcoming events
-  async listEvents(maxResults = 10) {
+  async listEvents(maxResults = 100) {
     try {
       const response = await this.calendar.events.list({
         calendarId: 'primary',
