@@ -211,6 +211,7 @@ app.post('/slack-events', express.json(), async (req, res) => {
   
   // Slack URL verification
   if (req.body.type === 'url_verification') {
+    console.log('URL verification challenge:', req.body.challenge);
     return res.json({ challenge: req.body.challenge });
   }
   
@@ -522,8 +523,15 @@ app.get('/', (req, res) => {
   res.json({ 
     status: 'Calendar Agent Server Running',
     authenticated: !!userTokens,
-    authUrl: userTokens ? null : `${req.protocol}://${req.get('host')}/auth`
+    authUrl: userTokens ? null : `${req.protocol}://${req.get('host')}/auth`,
+    hasSlackEvents: true,
+    version: '2.0'
   });
+});
+
+// Test endpoint for Slack events
+app.get('/slack-events', (req, res) => {
+  res.json({ message: 'Slack events endpoint is ready for POST requests' });
 });
 
 // Debug endpoint
