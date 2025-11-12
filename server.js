@@ -66,11 +66,17 @@ Convert this to a calendar action using these tools:
 - delete_calendar_event: Removes events
 - confirm_calendar_event: Preview before creating
 
-If you need more information (like time, attendees, etc.), respond with questions instead of calling a tool.
+Context for responses:
+- If the user says "yes" or "looks good" or confirms, create the event with create_calendar_event
+- If the user says "no" or wants changes, ask what they'd like to modify (time, title, attendees, etc.)
+- If the user provides specific changes, use confirm_calendar_event again with the updates
+- If you need more information initially, respond with questions instead of calling a tool
+
+Always be conversational and helpful. If something isn't clear, ask for clarification.
 
 Respond with either:
 1. A tool call if you have enough info
-2. Questions to gather missing details`
+2. Questions to gather missing details or clarify changes`
       }],
       tools: JSON.parse(await fs.readFile('./agent-tools.json')).tools
     }),
