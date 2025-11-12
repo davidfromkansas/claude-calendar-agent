@@ -226,14 +226,18 @@ Respond with either:
         res.json({ text: `🤔 Processing your request...` });
         
         // Send delayed response
-        const fetch = require('node:https');
+        const https = require('node:https');
+        const { URL } = require('node:url');
         const postData = JSON.stringify({
           text: `${emoji} ${responseText}`,
           response_type: 'in_channel'
         });
         
         setTimeout(() => {
+          const url = new URL(response_url);
           const options = {
+            hostname: url.hostname,
+            path: url.pathname + url.search,
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -241,7 +245,12 @@ Respond with either:
             }
           };
           
-          const req = require('node:https').request(response_url, options);
+          const req = https.request(options, (res) => {
+            console.log('Delayed response status:', res.statusCode);
+          });
+          req.on('error', (err) => {
+            console.error('Delayed response error:', err);
+          });
           req.write(postData);
           req.end();
         }, 1000);
@@ -268,7 +277,10 @@ Respond with either:
         });
         
         setTimeout(() => {
+          const url = new URL(response_url);
           const options = {
+            hostname: url.hostname,
+            path: url.pathname + url.search,
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -276,7 +288,12 @@ Respond with either:
             }
           };
           
-          const req = require('node:https').request(response_url, options);
+          const req = https.request(options, (res) => {
+            console.log('Question response status:', res.statusCode);
+          });
+          req.on('error', (err) => {
+            console.error('Question response error:', err);
+          });
           req.write(postData);
           req.end();
         }, 1000);
