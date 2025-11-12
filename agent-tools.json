@@ -2,7 +2,7 @@
   "tools": [
     {
       "name": "create_calendar_event",
-      "description": "Creates a new event in the user's Google Calendar",
+      "description": "Creates a new event in the user's Google Calendar. IMPORTANT: Always ask for specific time and confirm attendees before calling. For meetings, dates, or social events, attendees are usually required.",
       "input_schema": {
         "type": "object",
         "properties": {
@@ -12,11 +12,11 @@
           },
           "start_time": {
             "type": "string",
-            "description": "Start time in ISO format (e.g., '2024-12-15T10:00:00')"
+            "description": "REQUIRED: Start time in ISO format. If user doesn't specify time, ASK for it instead of assuming."
           },
           "end_time": {
             "type": "string",
-            "description": "End time in ISO format (e.g., '2024-12-15T11:00:00')"
+            "description": "REQUIRED: End time in ISO format. If not specified, ask for duration or end time."
           },
           "description": {
             "type": "string",
@@ -27,7 +27,7 @@
             "items": {
               "type": "string"
             },
-            "description": "Optional list of email addresses to invite"
+            "description": "IMPORTANT: For meetings, dates, social events, or work events - ask for attendee email addresses. Don't create these events without checking if others should be invited."
           }
         },
         "required": ["title", "start_time", "end_time"]
@@ -90,6 +90,39 @@
           }
         },
         "required": ["event_id"]
+      }
+    },
+    {
+      "name": "confirm_calendar_event",
+      "description": "Preview event details before creating. Use this to show user what will be created and get confirmation.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "The title/summary of the event"
+          },
+          "start_time": {
+            "type": "string",
+            "description": "Start time in ISO format"
+          },
+          "end_time": {
+            "type": "string",
+            "description": "End time in ISO format"
+          },
+          "description": {
+            "type": "string",
+            "description": "Optional description/details for the event"
+          },
+          "attendees": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of email addresses to invite"
+          }
+        },
+        "required": ["title", "start_time", "end_time"]
       }
     }
   ]

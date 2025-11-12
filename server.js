@@ -106,6 +106,9 @@ app.post('/webhook', async (req, res) => {
       case 'delete_calendar_event':
         result = await handleDeleteEvent(parameters);
         break;
+      case 'confirm_calendar_event':
+        result = await handleConfirmEvent(parameters);
+        break;
       default:
         result = {
           success: false,
@@ -155,6 +158,38 @@ async function handleUpdateEvent(params) {
 async function handleDeleteEvent(params) {
   const { event_id } = params;
   return await calendarService.deleteEvent(event_id);
+}
+
+async function handleConfirmEvent(params) {
+  const { title, start_time, end_time, description, attendees } = params;
+  
+  // Format the time for display
+  const startDate = new Date(start_time);
+  const endDate = new Date(end_time);
+  const duration = Math.round((endDate - startDate) / (1000 * 60)); // minutes
+  
+  const formatTime = (date) => {
+    return date.toLocaleString('en-US', { 
+      weekday: 'long',
+      month: 'short', 
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true 
+    });
+  };
+
+  return {
+    success: true,
+    preview: {
+      title: title,
+      when: `${formatTime(startDate)} to ${formatTime(endDate)} (${duration} minutes)`,
+      attendees: attendees && attendees.length > 0 ? attendees.join(', ') : 'None - personal event',
+      description: description || 'No description provided',
+    },
+    message: "📅 Event Preview - Does this look correct? Say 'yes' to create it or tell me what to change.",
+    next_action: "If confirmed, I'll create this event using create_calendar_event"
+  };
 }
 
 // Health check
