@@ -82,9 +82,10 @@ Respond with either:
   console.log('Claude response received');
   console.log('Full Claude response:', JSON.stringify(message.content, null, 2));
 
-  // Check if Claude wants to call a tool
-  if (message.content[0].type === 'tool_use') {
-    const toolCall = message.content[0];
+  // Check if Claude wants to call a tool (look for tool_use anywhere in the response)
+  const toolUse = message.content.find(item => item.type === 'tool_use');
+  if (toolUse) {
+    const toolCall = toolUse;
     
     // Execute the calendar action
     let result;
@@ -108,7 +109,11 @@ Respond with either:
         result = { success: false, error: `Unknown tool: ${toolCall.name}` };
     }
     
-    return { isToolCall: true, ...result };
+    // Include any text that came with the tool call
+    const textPart = message.content.find(item => item.type === 'text');
+    const contextText = textPart ? textPart.text : '';
+    
+    return { isToolCall: true, contextText, ...result };
   } else {
     // Claude is asking for more information
     const claudeResponse = message.content[0].text;
@@ -249,10 +254,11 @@ app.post('/slack-events', express.json(), async (req, res) => {
       if (result.isToolCall) {
         const emoji = result.success ? '✅' : '❌';
         const responseText = result.success ? result.message || 'Action completed!' : result.error;
-        console.log('Sending tool result to Slack:', `${emoji} ${responseText}`);
+        const fullText = result.contextText ? `${result.contextText}\n\n${emoji} ${responseText}` : `${emoji} ${responseText}`;
+        console.log('Sending tool result to Slack:', fullText);
         const slackResponse = await slack.chat.postMessage({
           channel: channel,
-          text: `${emoji} ${responseText}`,
+          text: fullText,
           unfurl_links: false,
           unfurl_media: false
         });
