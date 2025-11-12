@@ -154,14 +154,17 @@ app.post('/slack-webhook', express.urlencoded({ extended: true }), async (req, r
   }
   
   try {
+    console.log('Processing Slack request:', text);
+    
     // Use Claude to parse natural language and decide what calendar action to take
-    const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-5',
-      max_tokens: 1000,
-      messages: [{
-        role: 'user',
-        content: `You are a calendar assistant. The user said: "${text}"
-        
+    const message = await Promise.race([
+      anthropic.messages.create({
+        model: 'claude-3-5-sonnet-20241022',
+        max_tokens: 1000,
+        messages: [{
+          role: 'user',
+          content: `You are a calendar assistant. The user said: "${text}"
+          
 Convert this to a calendar action using these tools:
 - create_calendar_event: Creates new events
 - list_calendar_events: Shows upcoming events  
@@ -174,9 +177,15 @@ If you need more information (like time, attendees, etc.), respond with question
 Respond with either:
 1. A tool call if you have enough info
 2. Questions to gather missing details`
-      }],
-      tools: JSON.parse(await fs.readFile('./agent-tools.json')).tools
-    });
+        }],
+        tools: JSON.parse(await fs.readFile('./agent-tools.json')).tools
+      }),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Claude API timeout')), 25000)
+      )
+    ]);
+    
+    console.log('Claude response received');
 
     // Check if Claude wants to call a tool
     if (message.content[0].type === 'tool_use') {
