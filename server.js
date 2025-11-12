@@ -3,6 +3,7 @@ const express = require('express');
 const CalendarService = require('./calendar');
 const fs = require('fs').promises;
 const Anthropic = require('@anthropic-ai/sdk');
+const { WebClient } = require('@slack/web-api');
 
 const app = express();
 app.use(express.json());
@@ -14,6 +15,9 @@ let userTokens = null;
 const anthropic = process.env.CLAUDE_API_KEY ? new Anthropic({
   apiKey: process.env.CLAUDE_API_KEY
 }) : null;
+
+// Initialize Slack Web API client
+const slack = process.env.SLACK_BOT_TOKEN ? new WebClient(process.env.SLACK_BOT_TOKEN) : null;
 
 // Initialize calendar service with credentials
 async function initializeCalendar() {
@@ -38,6 +42,76 @@ async function initializeCalendar() {
     console.log('Calendar service initialized');
   } catch (error) {
     console.error('Failed to initialize calendar service:', error.message);
+  }
+}
+
+// Shared function to process calendar requests with Claude
+async function processWithClaude(text) {
+  console.log('Processing request:', text);
+  
+  calendarService.setTokens(userTokens);
+  
+  const message = await Promise.race([
+    anthropic.messages.create({
+      model: 'claude-3-haiku-20240307',
+      max_tokens: 1000,
+      messages: [{
+        role: 'user',
+        content: `You are a calendar assistant. The user said: "${text}"
+        
+Convert this to a calendar action using these tools:
+- create_calendar_event: Creates new events
+- list_calendar_events: Shows upcoming events  
+- update_calendar_event: Modifies existing events
+- delete_calendar_event: Removes events
+- confirm_calendar_event: Preview before creating
+
+If you need more information (like time, attendees, etc.), respond with questions instead of calling a tool.
+
+Respond with either:
+1. A tool call if you have enough info
+2. Questions to gather missing details`
+      }],
+      tools: JSON.parse(await fs.readFile('./agent-tools.json')).tools
+    }),
+    new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Claude API timeout')), 25000)
+    )
+  ]);
+  
+  console.log('Claude response received');
+
+  // Check if Claude wants to call a tool
+  if (message.content[0].type === 'tool_use') {
+    const toolCall = message.content[0];
+    
+    // Execute the calendar action
+    let result;
+    switch (toolCall.name) {
+      case 'create_calendar_event':
+        result = await handleCreateEvent(toolCall.input);
+        break;
+      case 'list_calendar_events':
+        result = await handleListEvents(toolCall.input);
+        break;
+      case 'update_calendar_event':
+        result = await handleUpdateEvent(toolCall.input);
+        break;
+      case 'delete_calendar_event':
+        result = await handleDeleteEvent(toolCall.input);
+        break;
+      case 'confirm_calendar_event':
+        result = await handleConfirmEvent(toolCall.input);
+        break;
+      default:
+        result = { success: false, error: `Unknown tool: ${toolCall.name}` };
+    }
+    
+    return { isToolCall: true, ...result };
+  } else {
+    // Claude is asking for more information
+    const claudeResponse = message.content[0].text;
+    return { isToolCall: false, claudeResponse };
   }
 }
 
@@ -131,7 +205,67 @@ app.post('/webhook', async (req, res) => {
   res.json(result);
 });
 
-// Slack webhook endpoint
+// Slack events endpoint for @mentions
+app.post('/slack-events', express.json(), async (req, res) => {
+  console.log('Received Slack event:', JSON.stringify(req.body, null, 2));
+  
+  // Slack URL verification
+  if (req.body.type === 'url_verification') {
+    return res.json({ challenge: req.body.challenge });
+  }
+  
+  // Handle app mention events
+  if (req.body.type === 'event_callback' && req.body.event.type === 'app_mention') {
+    const { event } = req.body;
+    const { text, channel, user } = event;
+    
+    // Remove the @bot mention from the text
+    const cleanText = text.replace(/<@[^>]+>/g, '').trim();
+    
+    // Check if calendar is authenticated
+    if (!userTokens) {
+      return res.json({});
+    }
+    
+    // Check if Claude API is available
+    if (!anthropic) {
+      return res.json({});
+    }
+    
+    try {
+      // Process with Claude and respond via Web API
+      const result = await processWithClaude(cleanText);
+      
+      if (result.isToolCall) {
+        const emoji = result.success ? '✅' : '❌';
+        const responseText = result.success ? result.message || 'Action completed!' : result.error;
+        await slack.chat.postMessage({
+          channel: channel,
+          text: `${emoji} ${responseText}`
+        });
+      } else {
+        // Claude is asking questions
+        await slack.chat.postMessage({
+          channel: channel,
+          text: `🤔 ${result.claudeResponse}`
+        });
+      }
+    } catch (error) {
+      console.error('Mention processing error:', error);
+      await slack.chat.postMessage({
+        channel: channel,
+        text: `❌ Sorry, I encountered an error processing your request.`
+      });
+    }
+    
+    res.json({});
+    return;
+  }
+  
+  res.json({});
+});
+
+// Slack webhook endpoint for slash commands
 app.post('/slack-webhook', express.urlencoded({ extended: true }), async (req, res) => {
   console.log('Received Slack webhook:', req.body);
   
