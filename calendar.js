@@ -56,15 +56,33 @@ class CalendarService {
   async createEvent(eventData) {
     const { title, startTime, endTime, description, attendees = [] } = eventData;
     
+    // Validate and parse dates
+    const startDate = new Date(startTime);
+    const endDate = new Date(endTime);
+    
+    if (isNaN(startDate.getTime())) {
+      throw new Error(`Invalid start time: ${startTime}`);
+    }
+    if (isNaN(endDate.getTime())) {
+      throw new Error(`Invalid end time: ${endTime}`);
+    }
+    
+    console.log('Creating event with dates:', {
+      startTime: startTime,
+      endTime: endTime,
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString()
+    });
+    
     const event = {
       summary: title,
       description: description,
       start: {
-        dateTime: new Date(startTime).toISOString(),
+        dateTime: startDate.toISOString(),
         timeZone: 'America/Los_Angeles',
       },
       end: {
-        dateTime: new Date(endTime).toISOString(),
+        dateTime: endDate.toISOString(),
         timeZone: 'America/Los_Angeles',
       },
       attendees: attendees.map(email => ({ email })),

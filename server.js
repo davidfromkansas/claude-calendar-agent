@@ -66,6 +66,8 @@ Convert this to a calendar action using these tools:
 - delete_calendar_event: Removes events
 - confirm_calendar_event: Preview before creating
 
+IMPORTANT: When providing dates/times, use ISO 8601 format (YYYY-MM-DDTHH:MM:SS) or clear formats like "2024-11-13T14:00:00" for 2pm on Nov 13, 2024.
+
 Context for responses:
 - If the user says "yes" or "looks good" or confirms, create the event with create_calendar_event
 - If the user says "no" or wants changes, ask what they'd like to modify (time, title, attendees, etc.)
