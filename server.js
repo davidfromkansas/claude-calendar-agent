@@ -318,9 +318,11 @@ app.get('/debug', (req, res) => {
       NODE_ENV: process.env.NODE_ENV,
       GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ? 'Set' : 'Not set',
       GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET ? 'Set' : 'Not set',
-      GOOGLE_REDIRECT_URI: process.env.GOOGLE_REDIRECT_URI
+      GOOGLE_REDIRECT_URI: process.env.GOOGLE_REDIRECT_URI,
+      CLAUDE_API_KEY: process.env.CLAUDE_API_KEY ? 'Set' : 'Not set'
     },
-    calendarServiceInitialized: !!calendarService.oauth2Client
+    calendarServiceInitialized: !!calendarService.oauth2Client,
+    anthropicInitialized: !!anthropic
   });
 });
 
