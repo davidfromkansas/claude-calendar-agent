@@ -221,13 +221,31 @@ app.post('/slack-events', express.json(), async (req, res) => {
     return res.json({ challenge: req.body.challenge });
   }
   
-  // Handle app mention events
-  if (req.body.type === 'event_callback' && req.body.event.type === 'app_mention') {
+  // Handle app mention events and regular messages
+  if (req.body.type === 'event_callback' && 
+      (req.body.event.type === 'app_mention' || req.body.event.type === 'message')) {
     const { event } = req.body;
     const { text, channel, user } = event;
     
-    // Remove the @bot mention from the text
-    const cleanText = text.replace(/<@[^>]+>/g, '').trim();
+    // Skip bot messages to avoid loops
+    if (event.bot_id) {
+      return res.json({});
+    }
+    
+    // For regular messages, only respond in channels where bot was recently mentioned
+    // For now, we'll just handle @mentions and direct responses
+    let cleanText = text;
+    if (event.type === 'app_mention') {
+      // Remove the @bot mention from the text
+      cleanText = text.replace(/<@[^>]+>/g, '').trim();
+    } else {
+      // For regular messages, treat as follow-up if it's a short response
+      cleanText = text.trim();
+      if (cleanText.length > 100) {
+        // Ignore long messages that aren't @mentions
+        return res.json({});
+      }
+    }
     
     // Check if calendar is authenticated
     if (!userTokens) {
