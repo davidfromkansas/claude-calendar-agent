@@ -548,7 +548,7 @@ app.get('/', (req, res) => {
     authenticated: !!userTokens,
     authUrl: userTokens ? null : `${req.protocol}://${req.get('host')}/auth`,
     hasSlackEvents: true,
-    version: '2.0'
+    version: '2.1'
   });
 });
 
