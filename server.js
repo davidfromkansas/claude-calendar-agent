@@ -148,7 +148,7 @@ app.post('/slack-webhook', express.urlencoded({ extended: true }), async (req, r
   // Check if Claude API is available
   if (!anthropic) {
     return res.json({
-      text: '❌ Claude API not configured. Please add CLAUDE_API_KEY environment variable.',
+      text: '❌ Claude API not configured. Please add CLAUDE_API_KEY environment variable to Railway.',
       response_type: 'ephemeral'
     });
   }
