@@ -248,16 +248,20 @@ app.post('/slack-events', express.json(), async (req, res) => {
       if (result.isToolCall) {
         const emoji = result.success ? '✅' : '❌';
         const responseText = result.success ? result.message || 'Action completed!' : result.error;
-        await slack.chat.postMessage({
+        console.log('Sending tool result to Slack:', `${emoji} ${responseText}`);
+        const slackResponse = await slack.chat.postMessage({
           channel: channel,
           text: `${emoji} ${responseText}`
         });
+        console.log('Slack response:', slackResponse.ok ? 'Success' : 'Failed');
       } else {
         // Claude is asking questions
-        await slack.chat.postMessage({
+        console.log('Sending Claude question to Slack:', result.claudeResponse);
+        const slackResponse = await slack.chat.postMessage({
           channel: channel,
           text: `🤔 ${result.claudeResponse}`
         });
+        console.log('Slack response:', slackResponse.ok ? 'Success' : 'Failed');
       }
     } catch (error) {
       console.error('Mention processing error:', error);
