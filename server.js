@@ -54,7 +54,7 @@ async function processWithClaude(text) {
   const message = await Promise.race([
     anthropic.messages.create({
       model: 'claude-3-haiku-20240307',
-      max_tokens: 1000,
+      max_tokens: 2000,
       messages: [{
         role: 'user',
         content: `You are a calendar assistant. The user said: "${text}"
@@ -80,6 +80,7 @@ Respond with either:
   ]);
   
   console.log('Claude response received');
+  console.log('Full Claude response:', JSON.stringify(message.content, null, 2));
 
   // Check if Claude wants to call a tool
   if (message.content[0].type === 'tool_use') {
