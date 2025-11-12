@@ -542,10 +542,12 @@ app.get('/debug', (req, res) => {
       GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ? 'Set' : 'Not set',
       GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET ? 'Set' : 'Not set',
       GOOGLE_REDIRECT_URI: process.env.GOOGLE_REDIRECT_URI,
-      CLAUDE_API_KEY: process.env.CLAUDE_API_KEY ? 'Set' : 'Not set'
+      CLAUDE_API_KEY: process.env.CLAUDE_API_KEY ? 'Set' : 'Not set',
+      SLACK_BOT_TOKEN: process.env.SLACK_BOT_TOKEN ? 'Set' : 'Not set'
     },
     calendarServiceInitialized: !!calendarService.oauth2Client,
-    anthropicInitialized: !!anthropic
+    anthropicInitialized: !!anthropic,
+    slackInitialized: !!slack
   });
 });
 
