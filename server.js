@@ -37,9 +37,17 @@ async function initializeCalendar() {
 
 // OAuth flow - redirect user to Google for authorization
 app.get('/auth', (req, res) => {
-  const authUrl = calendarService.getAuthUrl();
-  console.log('Generated auth URL:', authUrl);
-  res.redirect(authUrl);
+  try {
+    if (!calendarService.oauth2Client) {
+      return res.status(500).send('Calendar service not initialized');
+    }
+    const authUrl = calendarService.getAuthUrl();
+    console.log('Generated auth URL:', authUrl);
+    res.redirect(authUrl);
+  } catch (error) {
+    console.error('Auth error:', error);
+    res.status(500).send('Authentication error: ' + error.message);
+  }
 });
 
 // Handle OAuth callback
