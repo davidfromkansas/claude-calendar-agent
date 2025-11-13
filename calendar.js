@@ -131,7 +131,7 @@ class CalendarService {
       return {
         success: true,
         events: events,
-        message: `Found ${events.length} upcoming events`
+        message: `Retrieved ${events.length} calendar events for analysis`
       };
     } catch (error) {
       return {
