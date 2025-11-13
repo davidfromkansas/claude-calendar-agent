@@ -57,7 +57,17 @@ async function processWithClaude(text) {
       max_tokens: 2000,
       messages: [{
         role: 'user',
-        content: `You are a calendar assistant. The user said: "${text}"
+        content: `You are a calendar assistant. Current date and time: ${new Date().toLocaleString('en-US', { 
+          weekday: 'long', 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric',
+          hour: 'numeric',
+          minute: '2-digit',
+          timeZone: 'America/Los_Angeles'
+        })} (Pacific Time)
+
+The user said: "${text}"
         
 Convert this to a calendar action using these tools:
 - create_calendar_event: Creates new events
@@ -66,7 +76,12 @@ Convert this to a calendar action using these tools:
 - delete_calendar_event: Removes events
 - confirm_calendar_event: Preview before creating
 
-IMPORTANT: When providing dates/times, use ISO 8601 format (YYYY-MM-DDTHH:MM:SS) or clear formats like "2024-11-13T14:00:00" for 2pm on Nov 13, 2024.
+IMPORTANT: 
+- When providing dates/times, use ISO 8601 format (YYYY-MM-DDTHH:MM:SS)
+- Calculate relative dates correctly based on the current date above
+- "tomorrow" = the day after today
+- "next Monday" = the Monday of next week (not this week)
+- "Friday" usually means this coming Friday unless context suggests otherwise
 
 Context for responses:
 - If the user says "yes" or "looks good" or confirms, create the event with create_calendar_event
