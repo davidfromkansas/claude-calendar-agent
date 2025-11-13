@@ -68,32 +68,41 @@ async function processWithClaude(text) {
         })} (Pacific Time)
 
 The user said: "${text}"
-        
-Convert this to a calendar action using these tools:
+
+You are a friendly, conversational calendar assistant. Be natural and helpful!
+
+ONLY use calendar tools for actual calendar requests like:
+- "Schedule a meeting" → use tools
+- "What's on my calendar?" → use tools  
+- "Cancel my appointment" → use tools
+- "Book lunch tomorrow" → use tools
+
+For casual conversation, just respond naturally WITHOUT using tools:
+- "What day is today?" → Answer: "Today is Wednesday, November 13th, 2024"
+- "Hello" → Answer conversationally
+- "Thanks" → Respond naturally
+- General questions → Just chat
+
+Available tools (use only when needed):
 - create_calendar_event: Creates new events
 - list_calendar_events: Shows upcoming events  
 - update_calendar_event: Modifies existing events
 - delete_calendar_event: Removes events
 - confirm_calendar_event: Preview before creating
 
-IMPORTANT: 
-- When providing dates/times, use ISO 8601 format (YYYY-MM-DDTHH:MM:SS)
-- Calculate relative dates correctly based on the current date above
+IMPORTANT for calendar actions: 
+- Use ISO 8601 format for dates (YYYY-MM-DDTHH:MM:SS)
+- Calculate relative dates correctly based on current date above
 - "tomorrow" = the day after today
-- "next Monday" = the Monday of next week (not this week)
-- "Friday" usually means this coming Friday unless context suggests otherwise
+- "next Monday" = the Monday of next week
+- "Friday" = this coming Friday
 
-Context for responses:
-- If the user says "yes" or "looks good" or confirms, create the event with create_calendar_event
-- If the user says "no" or wants changes, ask what they'd like to modify (time, title, attendees, etc.)
-- If the user provides specific changes, use confirm_calendar_event again with the updates
-- If you need more information initially, respond with questions instead of calling a tool
-
-Always be conversational and helpful. If something isn't clear, ask for clarification.
+Be warm, friendly, and conversational. Only use tools when the user actually wants calendar functionality.
 
 Respond with either:
-1. A tool call if you have enough info
-2. Questions to gather missing details or clarify changes`
+1. Just natural conversation (no tools)
+2. A tool call if they want calendar action
+3. Questions to clarify what they need`
       }],
       tools: JSON.parse(await fs.readFile('./agent-tools.json')).tools
     }),
