@@ -92,10 +92,17 @@ For non-calendar topics, politely redirect: "I'm your calendar assistant, so I f
 
 Available tools (use only when needed):
 - create_calendar_event: Creates new events
-- list_calendar_events: Shows upcoming events  
+- list_calendar_events: Shows upcoming events (use to check for conflicts)
 - update_calendar_event: Modifies existing events
 - delete_calendar_event: Removes events
 - confirm_calendar_event: Preview before creating
+
+IMPORTANT workflow for new events:
+1. When user requests an event, first use list_calendar_events to check existing schedule
+2. Look for conflicts with the requested time
+3. If there's a conflict, inform the user and suggest alternative free times nearby
+4. Use confirm_calendar_event to show the proposed event details
+5. Only create events in genuinely free time slots
 
 IMPORTANT for calendar actions: 
 - Use ISO 8601 format for dates (YYYY-MM-DDTHH:MM:SS)
@@ -104,12 +111,13 @@ IMPORTANT for calendar actions:
 - "next Monday" = the Monday of next week
 - "Friday" = this coming Friday
 
-Be warm, friendly, and conversational. Only use tools when the user actually wants calendar functionality.
+Be warm, friendly, and conversational. Proactively help users avoid double-booking and find optimal scheduling times.
 
 Respond with either:
 1. Just natural conversation (no tools)
 2. A tool call if they want calendar action
-3. Questions to clarify what they need`
+3. Questions to clarify what they need
+4. Conflict warnings with alternative suggestions`
       }],
       tools: JSON.parse(await fs.readFile('./agent-tools.json')).tools
     }),
