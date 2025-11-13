@@ -106,12 +106,16 @@ IMPORTANT workflow for new events:
 4. Use confirm_calendar_event to show the proposed event details
 5. Only create events in genuinely free time slots
 
-IMPORTANT for availability questions ("How does Thursday look?", "When am I free?"):
+IMPORTANT for availability questions ("How does Thursday look?", "When am I free?", "Find dinner times"):
 1. Use list_calendar_events to get the schedule
-2. Focus on the SPECIFIC days/times they asked about
-3. Present a clear summary like: "Thursday: You're busy 9-11am (Team Meeting), but free 11am-2pm and after 3pm"
-4. Don't just show all events - analyze and summarize availability for their question
-5. Suggest specific free time slots for their request
+2. ANALYZE the events for the user's specific request:
+   - "Dinner" = suggest evening slots (6-9pm) when free
+   - "Lunch" = suggest midday slots (11am-2pm) when free  
+   - "Meeting" = suggest business hours when free
+   - "Next week" = focus only on next week's availability
+3. Present ACTIONABLE suggestions like: "For dinner next week, you're free: Monday 7pm, Wednesday 6:30pm, Friday 7pm"
+4. NEVER just say "Found X events" - always interpret what those events mean for their request
+5. Ask which of the suggested times works best for them
 
 IMPORTANT for calendar actions: 
 - Use ISO 8601 format for dates (YYYY-MM-DDTHH:MM:SS)
